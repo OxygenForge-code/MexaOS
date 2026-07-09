@@ -1,9 +1,18 @@
-/* ============================================================
+ ============================================================
  *  MexaOS VGA Driver
  *  Hardware text mode with MexaOS indigo theme
  * ============================================================ */
 
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+
+#include "../../include/mexaos.h"
 #include "include/vga.h"
+#include "include/memory.h"
+
+#define STR(x)  #x
+#define XSTR(x) STR(x)
 
 static struct vga_state vga = {
     .buffer = (uint16_t *)VGA_BUFFER,
@@ -136,27 +145,27 @@ void vga_scroll(void) {
 
 /* ─── Put Character ─── */
 void vga_putc(char c) {
-    if (!vga.echo_enabled && c != '\n' && c != '\r' && c != '\t' && c != '\b') {
+    if (!vga.echo_enabled && c != '\\n' && c != '\\r' && c != '\\t' && c != '\\b') {
         return;
     }
     
     uint8_t color = vga_entry_color(vga.fg_color, vga.bg_color);
     
     switch (c) {
-        case '\n':
+        case '\\n':
             vga.col = 0;
             vga.row++;
             break;
             
-        case '\r':
+        case '\\r':
             vga.col = 0;
             break;
             
-        case '\t':
+        case '\\t':
             vga.col = (vga.col + 8) & ~7;
             break;
             
-        case '\b':
+        case '\\b':
             if (vga.col > 0) {
                 vga.col--;
                 vga.buffer[vga.row * vga.width + vga.col] = vga_entry(' ', color);
@@ -221,7 +230,7 @@ void vga_draw_line_h(uint32_t x, uint32_t y, uint32_t len, uint8_t color) {
     if (y >= vga.height) return;
     uint8_t lc = vga_entry_color(color, vga.bg_color);
     for (uint32_t i = 0; i < len && x + i < vga.width; i++) {
-        vga.buffer[y * vga.width + x + i] = vga_entry('─', lc);
+        vga.buffer[y * vga.width + x + i] = vga_entry('-', lc);
     }
 }
 
@@ -229,7 +238,7 @@ void vga_draw_line_v(uint32_t x, uint32_t y, uint32_t len, uint8_t color) {
     if (x >= vga.width) return;
     uint8_t lc = vga_entry_color(color, vga.bg_color);
     for (uint32_t i = 0; i < len && y + i < vga.height; i++) {
-        vga.buffer[(y + i) * vga.width + x] = vga_entry('│', lc);
+        vga.buffer[(y + i) * vga.width + x] = vga_entry('|', lc);
     }
 }
 
@@ -247,7 +256,7 @@ void vga_fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t color
 void vga_print_dec(uint64_t n) {
     char buf[32];
     int i = 30;
-    buf[31] = '\0';
+    buf[31] = '\\0';
     
     if (n == 0) {
         vga_putc('0');
@@ -266,7 +275,7 @@ void vga_print_hex(uint64_t n) {
     char buf[32];
     const char *hex = "0123456789ABCDEF";
     int i = 30;
-    buf[31] = '\0';
+    buf[31] = '\\0';
     
     if (n == 0) {
         vga_puts("0x0");
@@ -305,30 +314,29 @@ void vga_splash_screen(void) {
     
     /* Draw themed border */
     uint8_t accent = vga_entry_color(VGA_COLOR_LBLUE, VGA_COLOR_BLACK);
-    uint8_t dim = vga_entry_color(VGA_COLOR_DGRAY, VGA_COLOR_BLACK);
     
     /* Top border */
     for (int x = 5; x < 75; x++) {
-        vga.buffer[3 * vga.width + x] = vga_entry('═', accent);
-        vga.buffer[21 * vga.width + x] = vga_entry('═', accent);
+        vga.buffer[3 * vga.width + x] = vga_entry('=', accent);
+        vga.buffer[21 * vga.width + x] = vga_entry('=', accent);
     }
     
     /* Side borders */
     for (int y = 4; y < 21; y++) {
-        vga.buffer[y * vga.width + 5] = vga_entry('║', accent);
-        vga.buffer[y * vga.width + 74] = vga_entry('║', accent);
+        vga.buffer[y * vga.width + 5] = vga_entry('|', accent);
+        vga.buffer[y * vga.width + 74] = vga_entry('|', accent);
     }
     
     /* Corners */
-    vga.buffer[3 * vga.width + 5] = vga_entry('╔', accent);
-    vga.buffer[3 * vga.width + 74] = vga_entry('╗', accent);
-    vga.buffer[21 * vga.width + 5] = vga_entry('╚', accent);
-    vga.buffer[21 * vga.width + 74] = vga_entry('╝', accent);
+    vga.buffer[3 * vga.width + 5] = vga_entry('+', accent);
+    vga.buffer[3 * vga.width + 74] = vga_entry('+', accent);
+    vga.buffer[21 * vga.width + 5] = vga_entry('+', accent);
+    vga.buffer[21 * vga.width + 74] = vga_entry('+', accent);
     
     /* Logo text - centered */
     const char *logo[] = {
         " __  ___                      ____   _____ ",
-        " /  |/  /____ _   _____  _____/ __ \\/ ___/ ",
+        " /  |/  /____ _   _____  _____/ __ \\\/ ___/ ",
         "/ /|_/ // __ \\ | / / _ \\/ ___/ / / /\\__ \\  ",
         "/ /  / // /_/ / |/ /  __/ /  / /_/ /___/ /  ",
         "/_/  /_/ \\____/|___/\\___/_/   \\____//____/   "
@@ -352,7 +360,7 @@ void vga_splash_screen(void) {
     }
     
     /* Version */
-    const char *ver = "v" MEXAOS_VERSION " (Build " STR(MEXAOS_BUILD) ")";
+    const char *ver = "v" MEXAOS_VERSION " (Build " XSTR(MEXAOS_BUILD) ")";
     int ver_x = (vga.width - strlen(ver)) / 2;
     for (int i = 0; ver[i]; i++) {
         uint8_t c = vga_entry_color(VGA_COLOR_DGRAY, VGA_COLOR_BLACK);
@@ -371,7 +379,7 @@ void vga_splash_screen(void) {
     int pb_x = (vga.width - 40) / 2;
     for (int i = 0; i < 40; i++) {
         uint8_t c = vga_entry_color(VGA_COLOR_LBLUE, VGA_COLOR_BLACK);
-        vga.buffer[19 * vga.width + pb_x + i] = vga_entry('░', c);
+        vga.buffer[19 * vga.width + pb_x + i] = vga_entry('.', c);
     }
     
     vga.row = 23;
@@ -382,10 +390,12 @@ void vga_splash_screen(void) {
 void vga_draw_logo(void) {
     vga_puts("MexaOS");
 }
+'''
 
-/* ─── Utility ─── */
-static size_t strlen(const char *s) {
-    size_t len = 0;
-    while (s[len]) len++;
-    return len;
-}
+# Dosyaya yaz
+output_path = "/mnt/agents/output/kernel/vga.c"
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+with open(output_path, 'w') as f:
+    f.write(vga_c)
+
+print(f"Written: kernel/vga.c ({len(vga_c)} chars)")
