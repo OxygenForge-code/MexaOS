@@ -1,97 +1,107 @@
-/* ============================================================
- *  MexaOS Process Manager
- * ============================================================ */
-
-#ifndef MEXAOS_PROCESS_H
-#define MEXAOS_PROCESS_H
-
-#include <stdint.h>
-#include <stddef.h>
-
-/* ─── Type Definitions ─── */
-typedef int pid_t;
-typedef uint64_t virt_addr_t;
-
-/* ─── Constants ─── */
-#define PROC_NAME_LEN   64
-#define PROC_MAX        256
-#define PROC_STACK_SIZE 65536
-#define MAX_PROCESSES   256
-#define KERNEL_PID      0
-
-/* ─── Process States ─── */
-#define PROC_EMPTY      0
-#define PROC_READY      1
-#define PROC_RUNNING    2
-#define PROC_BLOCKED    3
-#define PROC_SLEEPING   4
-#define PROC_ZOMBIE     5
-
-/* ─── Process Flags ─── */
-#define PROC_FLAG_KERNEL      (1 << 0)
-#define PROC_FLAG_DAEMON      (1 << 1)
-#define PROC_FLAG_CRITICAL    (1 << 2)
-#define PROC_FLAG_NO_KILL     (1 << 3)
-#define PROC_FLAG_AI_CREATED  (1 << 4)
-
-/* ─── Process Structure ─── */
-struct process {
-    pid_t pid;
-    pid_t ppid;
-    char name[PROC_NAME_LEN];
-    uint8_t state;
-    uint8_t priority;
-    uint64_t ticks;
-    uint64_t sleep_until;
-    
-    virt_addr_t stack_bottom;
-    virt_addr_t stack_top;
-    virt_addr_t entry_point;
-    
-    uint64_t *page_table;
-    struct process *next;
-    struct process *prev;
-    
-    /* Additional fields for process.c compatibility */
-    uint32_t quantum;
-    uint32_t flags;
-    uint64_t cpu_time;
-    uint64_t start_time;
-    uint64_t wake_time;
-    uint64_t rsp;
-    uint64_t rip;
-    uint64_t rflags;
-    uint16_t cs;
-    uint16_t ss;
-    char intent_context[256];
-    uint8_t ai_assisted;
-};
-
-/* ─── Scheduler Functions ─── */
-void scheduler_init(void);
-void scheduler_tick(void);
-void scheduler_switch_task(void);
-void scheduler_yield(void);
-struct process *scheduler_current(void);
-
-/* ─── Process Functions ─── */
-pid_t process_create(const char *name, void (*entry)(void), uint8_t priority);
-pid_t process_create_from_intent(const char *intent, uint8_t priority);
-int process_kill(pid_t pid);
-int process_block(pid_t pid);
-int process_unblock(pid_t pid);
-int process_sleep(pid_t pid, uint64_t ms);
-void process_exit(int code);
-
-struct process *process_get(pid_t pid);
-int process_set_priority(pid_t pid, uint8_t priority);
-int process_set_name(pid_t pid, const char *name);
-
-void process_list(void);
-void process_dump_info(pid_t pid);
-
-/* ─── Intent Integration ─── */
-pid_t process_spawn_for_intent(const char *intent_text);
-void process_attach_intent(pid_t pid, const char *intent);
-
-#endif
+﻿2026-07-09T18:26:40.6553986Z ##[group]Run make clean
+make clean
+make all
+shell: /usr/bin/bash -e {0}
+  CLEAN build files
+  AS    kernel/isr.asm
+  CC    kernel/kmain.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+  CC    kernel/vga.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+  CC    kernel/interrupt.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+  CC    kernel/memory.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+kernel/memory.c: In function ‘pmm_init’:
+kernel/memory.c:52:44: warning: passing argument 1 of ‘virt_to_phys’ makes pointer from integer without a cast [-Wint-conversion]
+   52 |     phys_addr_t bitmap_phys = virt_to_phys((virt_addr_t)pmm_bitmap);
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~
+      |                                            |
+      |                                            long unsigned int
+In file included from kernel/memory.c:6:
+kernel/include/memory.h:140:46: note: expected ‘void *’ but argument is of type ‘long unsigned int’
+  140 | static inline phys_addr_t virt_to_phys(void *v) {
+      |                                        ~~~~~~^
+kernel/memory.c:45:44: warning: unused parameter ‘mem_usable’ [-Wunused-parameter]
+   45 | void pmm_init(uint64_t mem_total, uint64_t mem_usable) {
+      |                                   ~~~~~~~~~^~~~~~~~~~
+kernel/memory.c: In function ‘vmm_map_page’:
+kernel/memory.c:229:12: warning: passing argument 1 of ‘invlpg’ makes pointer from integer without a cast [-Wint-conversion]
+  229 |     invlpg(vaddr);
+      |            ^~~~~
+      |            |
+      |            virt_addr_t {aka long unsigned int}
+kernel/include/memory.h:144:33: note: expected ‘void *’ but argument is of type ‘virt_addr_t’ {aka ‘long unsigned int’}
+  144 | static inline void invlpg(void *addr) {
+      |                           ~~~~~~^~~~
+  CC    kernel/timer.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+kernel/timer.c: In function ‘timer_irq_handler’:
+kernel/timer.c:41:5: warning: implicit declaration of function ‘scheduler_tick’ [-Wimplicit-function-declaration]
+   41 |     scheduler_tick();
+      |     ^~~~~~~~~~~~~~
+  CC    kernel/keyboard.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+  CC    kernel/serial.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+  CC    kernel/process.c
+cc1: warning: command-line option ‘-fno-rtti’ is valid for C++/D/ObjC++ but not for C
+kernel/process.c: In function ‘scheduler_init’:
+kernel/process.c:40:27: warning: assignment to ‘uint64_t *’ {aka ‘long unsigned int *’} from incompatible pointer type ‘struct page_table *’ [-Wincompatible-pointer-types]
+   40 |     idle_proc->page_table = &kernel_page_table;
+      |                           ^
+kernel/process.c: In function ‘process_create’:
+kernel/process.c:70:22: warning: assignment to ‘uint64_t *’ {aka ‘long unsigned int *’} from incompatible pointer type ‘struct page_table *’ [-Wincompatible-pointer-types]
+   70 |     proc->page_table = vmm_create_page_table();
+      |                      ^
+kernel/process.c:73:47: warning: passing argument 1 of ‘vmm_alloc_region’ from incompatible pointer type [-Wincompatible-pointer-types]
+   73 |     proc->stack_bottom = vmm_alloc_region(proc->page_table, 16, PTE_PRESENT | PTE_WRITABLE | PTE_USER);
+      |                                           ~~~~^~~~~~~~~~~~
+      |                                               |
+      |                                               uint64_t * {aka long unsigned int *}
+In file included from kernel/process.c:15:
+kernel/include/memory.h:109:49: note: expected ‘struct page_table *’ but argument is of type ‘uint64_t *’ {aka ‘long unsigned int *’}
+  109 | virt_addr_t vmm_alloc_region(struct page_table *pt, size_t pages, uint64_t flags);
+      |                              ~~~~~~~~~~~~~~~~~~~^~
+kernel/process.c:75:36: warning: passing argument 1 of ‘vmm_destroy_page_table’ from incompatible pointer type [-Wincompatible-pointer-types]
+   75 |         vmm_destroy_page_table(proc->page_table);
+      |                                ~~~~^~~~~~~~~~~~
+      |                                    |
+      |                                    uint64_t * {aka long unsigned int *}
+kernel/include/memory.h:107:48: note: expected ‘struct page_table *’ but argument is of type ‘uint64_t *’ {aka ‘long unsigned int *’}
+  107 | void vmm_destroy_page_table(struct page_table *pt);
+      |                             ~~~~~~~~~~~~~~~~~~~^~
+kernel/process.c: In function ‘scheduler_switch_task’:
+kernel/process.c:160:35: warning: passing argument 1 of ‘vmm_switch_page_table’ from incompatible pointer type [-Wincompatible-pointer-types]
+  160 |         vmm_switch_page_table(next->page_table);
+      |                               ~~~~^~~~~~~~~~~~
+      |                                   |
+      |                                   uint64_t * {aka long unsigned int *}
+kernel/include/memory.h:105:47: note: expected ‘struct page_table *’ but argument is of type ‘uint64_t *’ {aka ‘long unsigned int *’}
+  105 | void vmm_switch_page_table(struct page_table *pt);
+      |                            ~~~~~~~~~~~~~~~~~~~^~
+kernel/process.c: In function ‘process_kill’:
+kernel/process.c:185:46: warning: comparison of distinct pointer types lacks a cast
+  185 |     if (proc->page_table && proc->page_table != &kernel_page_table)
+      |                                              ^~
+kernel/process.c:186:36: warning: passing argument 1 of ‘vmm_destroy_page_table’ from incompatible pointer type [-Wincompatible-pointer-types]
+  186 |         vmm_destroy_page_table(proc->page_table);
+      |                                ~~~~^~~~~~~~~~~~
+      |                                    |
+      |                                    uint64_t * {aka long unsigned int *}
+kernel/include/memory.h:107:48: note: expected ‘struct page_table *’ but argument is of type ‘uint64_t *’ {aka ‘long unsigned int *’}
+  107 | void vmm_destroy_page_table(struct page_table *pt);
+      |                             ~~~~~~~~~~~~~~~~~~~^~
+kernel/process.c: At top level:
+kernel/process.c:328:14: error: static declaration of ‘strstr’ follows non-static declaration
+  328 | static char *strstr(const char *haystack, const char *needle) {
+      |              ^~~~~~
+In file included from kernel/process.c:8:
+/usr/include/string.h:350:14: note: previous declaration of ‘strstr’ with type ‘char *(const char *, const char *)’
+  350 | extern char *strstr (const char *__haystack, const char *__needle)
+      |              ^~~~~~
+kernel/process.c:328:14: warning: ‘strstr’ defined but not used [-Wunused-function]
+  328 | static char *strstr(const char *haystack, const char *needle) {
+      |              ^~~~~~
+make: *** [Makefile:92: build/process.o] Error 1
+Process completed with exit code 2.
