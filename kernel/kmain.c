@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdarg.h>          /* EKLENDİ: va_list için */
+#include <stdarg.h>
 
 #include "include/kernlib.h"
 #include "include/vga.h"
@@ -20,11 +20,7 @@
 #include "include/shell.h"
 #include "include/window.h"
 
-/* ─── Stringify Macros ─── */
-#define STR(x)  #x
-#define XSTR(x) STR(x)
-
-/* ─── Build Info ─── */
+/* Build info defaults */
 #ifndef MEXAOS_VERSION
 #define MEXAOS_VERSION "2.0.0"
 #endif
@@ -35,28 +31,25 @@
 #define MEXAOS_CODENAME "Unknown"
 #endif
 
+/* Stringify macros */
+#define STR(x)  #x
+#define XSTR(x) STR(x)
+
 /* ─── Kernel Entry Point ─── */
 void kmain(uint64_t boot_info_addr) {
-    /* Initialize VGA */
+    (void)boot_info_addr;
+    
     vga_init();
     vga_clear();
     
-    /* Print boot banner */
     vga_setcolor(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
-    vga_puts("╔══════════════════════════════════════════════════════════╗\n");
-    vga_puts("║              MexaOS v");
+    vga_puts("MexaOS v");
     vga_puts(MEXAOS_VERSION);
-    vga_puts(" — Codename: \"");
-    vga_puts(MEXAOS_CODENAME);
-    vga_puts("\"\n");
-    vga_puts("║              Build ");
+    vga_puts(" Build ");
     vga_puts(XSTR(MEXAOS_BUILD));
-    vga_puts("\n");
-    vga_puts("║              Intent-Driven Operating System               ║\n");
-    vga_puts("╚══════════════════════════════════════════════════════════╝\n\n");
+    vga_puts("\n\n");
     vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     
-    /* Initialize subsystems */
     vga_puts("[*] Initializing memory manager...\n");
     mm_init();
     
@@ -84,26 +77,20 @@ void kmain(uint64_t boot_info_addr) {
     vga_puts("[*] Initializing window manager...\n");
     wm_init();
     
-    /* Parse boot info from bootloader */
-    parse_boot_info(boot_info_addr);
-    
-    /* Start shell */
     vga_puts("\n[*] Starting MexaOS Shell...\n\n");
     shell_run();
     
-    /* Halt if shell returns */
     kpanic("Shell exited unexpectedly");
 }
 
 /* ─── Parse Boot Info ─── */
-/* static kaldırıldı — kernlib.h'de non-static declare edilmiş */
 void parse_boot_info(uint64_t addr) {
     (void)addr;
     /* TODO: Parse memory map, framebuffer info, etc. */
 }
 
-/* ─── Kernel Panic ─── */
-void kpanic(const char *msg) {
+/* ─── Kernel Panic Implementation ─── */
+void __attribute__((noreturn)) kpanic_impl(const char *msg, const char *file, int line) {
     cli();
     
     vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_RED);
@@ -115,6 +102,16 @@ void kpanic(const char *msg) {
     vga_puts("║  Message: ");
     vga_puts(msg);
     vga_puts("\n");
+    vga_puts("║  File:    ");
+    vga_puts(file);
+    vga_puts("\n");
+    vga_puts("║  Line:    ");
+    
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", line);
+    vga_puts(buf);
+    
+    vga_puts("\n");
     vga_puts("║  Version: ");
     vga_puts(MEXAOS_VERSION);
     vga_puts(" (Build ");
@@ -122,7 +119,6 @@ void kpanic(const char *msg) {
     vga_puts(")\n");
     vga_puts("╚══════════════════════════════════════════════════════════╝\n");
     
-    /* Halt forever */
     while (1) {
         hlt();
     }
@@ -138,17 +134,4 @@ void kprintf(const char *fmt, ...) {
     va_end(args);
     
     vga_puts(buf);
-}
-
-/* ─── Halt Instruction ─── */
-void hlt(void) {
-    __asm__ __volatile__ ("hlt");
-}
-
-void cli(void) {
-    __asm__ __volatile__ ("cli");
-}
-
-void sti(void) {
-    __asm__ __volatile__ ("sti");
 }
