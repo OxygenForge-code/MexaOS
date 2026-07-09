@@ -2,7 +2,7 @@
  *  MexaOS Filesystem (MexFS)
  * ============================================================ */
 
-#ifndef MEXAOS MEXAOS_MEXFS_H
+#ifndef MEXAOS_MEXFS_H
 #define MEXAOS_MEXFS_H
 
 #include <stdint.h>
