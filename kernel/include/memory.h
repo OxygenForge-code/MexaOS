@@ -34,6 +34,7 @@ typedef uint64_t virt_addr_t;
 #define PTE_WRITABLE    (1ULL << 1)
 #define PTE_USER        (1ULL << 2)
 #define PTE_HUGE        (1ULL << 7)
+#define PTE_ADDR_MASK   0x000FFFFFFFFFF000ULL
 
 /* ─── Huge Page ─── */
 #define HUGE_PAGE_SIZE  (2 * 1024 * 1024)
@@ -75,8 +76,13 @@ struct page_table {
 /* ─── Slab Cache ─── */
 struct slab_cache {
     uint32_t size;
+    uint32_t object_size;
+    uint32_t objects_per_slab;
     uint32_t count;
     void *head;
+    void *partial;
+    void *full;
+    void *free;
 };
 
 /* ─── Functions ─── */
@@ -130,6 +136,10 @@ static inline void *phys_to_virt(phys_addr_t p) {
 
 static inline phys_addr_t virt_to_phys(void *v) {
     return (phys_addr_t)v - KERNEL_BASE;
+}
+
+static inline void invlpg(void *addr) {
+    __asm__ __volatile__("invlpg (%0)" ::"r"(addr) : "memory");
 }
 
 #endif
