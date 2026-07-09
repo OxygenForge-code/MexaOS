@@ -25,7 +25,7 @@
 #define VGA_COLOR_YELLOW        14
 #define VGA_COLOR_WHITE         15
 
-/* EKLENDİ: Eksik renk tanımları */
+/* Aliases */
 #define VGA_COLOR_DIM           VGA_COLOR_DARK_GRAY
 #define VGA_COLOR_ORANGE        VGA_COLOR_BROWN
 
@@ -36,4 +36,4 @@ void vga_putchar(char c);
 void vga_puts(const char *s);
 void vga_setcolor(uint8_t fg, uint8_t bg);
 
-#endif /* MEXAOS_VGA_H */
+#endif
