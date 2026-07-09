@@ -37,3 +37,9 @@ jobs:
         with:
           name: MexaOS-ISO
           path: build/*.iso
+          
+      - name: Upload Disk Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: MexaOS-Disk
+          path: build/*.img
