@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdarg.h>          /* EKLENDİ: va_list için */
+#include <stdarg.h>
 
 /* ─── Physical Memory ─── */
 #define PAGE_SIZE       4096
@@ -47,4 +47,4 @@ void *memmove(void *dest, const void *src, size_t n);
 int snprintf(char *str, size_t size, const char *fmt, ...);
 int vsnprintf(char *str, size_t size, const char *fmt, va_list args);
 
-#endif /* MEXAOS_MEMORY_H */
+#endif
