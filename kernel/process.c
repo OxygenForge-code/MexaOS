@@ -324,18 +324,3 @@ void process_attach_intent(pid_t pid, const char *intent) {
         proc->intent_context[255] = '\0';
     }
 }
-
-static char *strstr(const char *haystack, const char *needle) {
-    if (!*needle) return (char *)haystack;
-    char *h = (char *)haystack;
-    while (*h) {
-        if (*h == *needle) {
-            char *h2 = h + 1;
-            char *n2 = (char *)needle + 1;
-            while (*n2 && *h2 == *n2) { h2++; n2++; }
-            if (!*n2) return h;
-        }
-        h++;
-    }
-    return NULL;
-}
