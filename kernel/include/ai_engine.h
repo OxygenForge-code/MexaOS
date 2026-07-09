@@ -1,105 +1,55 @@
 /* ============================================================
- *  MexaOS AI Intent Engine Header
- *  The heart of the intent-driven operating system
+ *  MexaOS AI Engine
  * ============================================================ */
 
-#ifndef AI_ENGINE_H
-#define AI_ENGINE_H
+#ifndef MEXAOS_AI_ENGINE_H
+#define MEXAOS_AI_ENGINE_H
 
-#include "../../include/mexaos.h"
+#include <stdint.h>
+#include <stddef.h>
 
-/* ─── Intent Command ─── */
-struct intent_command {
-    int category;
-    char action[64];
-    char target[256];
-    char parameters[512];
+/* ─── Constants ─── */
+#define INTENT_MAX_LEN      256
+#define INTENT_MAX_TOKENS   64
+#define AI_CONFIDENCE_THRESHOLD 0.75f
+
+/* ─── Intent Types ─── */
+#define INTENT_UNKNOWN      0
+#define INTENT_OPEN         1
+#define INTENT_CREATE       2
+#define INTENT_DELETE       3
+#define INTENT_SEARCH       4
+#define INTENT_RUN          5
+#define INTENT_KILL         6
+#define INTENT_CONFIG       7
+#define INTENT_QUERY        8
+
+/* ─── Intent Structure ─── */
+struct intent {
+    uint32_t type;
     float confidence;
-    uint32_t flags;
-};
-
-/* ─── Intent History ─── */
-#define MAX_INTENT_HISTORY  128
-struct intent_record {
     char text[INTENT_MAX_LEN];
-    int category;
-    int result;
-    uint64_t timestamp;
-    float confidence;
-};
-
-/* ─── Workspace State ─── */
-struct workspace_state {
-    char name[32];
-    int id;
-    char theme[32];
-    char layout[32];
-    uint8_t focus_mode;
-    uint8_t notifications;
-    uint64_t active_since;
+    char target[INTENT_MAX_LEN];
+    uint32_t param_count;
+    char params[INTENT_MAX_TOKENS][INTENT_MAX_LEN];
 };
 
 /* ─── AI Engine Functions ─── */
 void ai_engine_init(void);
-void ai_process_pending(void);
+void ai_engine_shutdown(void);
 
-/* Intent processing */
-int ai_process_intent(const char *text);
-int ai_parse_intent(const char *text, struct intent_command *cmd);
-float ai_calculate_confidence(const char *text, int category);
+/* ─── Intent Processing ─── */
+struct intent *ai_parse_intent(const char *text);
+float ai_score_intent(const char *text, uint32_t intent_type);
+const char *ai_intent_name(uint32_t intent_type);
 
-/* Intent categories */
-int ai_classify_intent(const char *text);
-const char *ai_intent_name(int category);
+/* ─── Natural Language ─── */
+char *ai_suggest_completion(const char *partial);
+char *ai_generate_response(const char *query);
 
-/* Intent execution */
-int ai_execute_command(struct intent_command *cmd);
-int ai_execute_system(const char *action, const char *target, const char *params);
-int ai_execute_file(const char *action, const char *target, const char *params);
-int ai_execute_workspace(const char *action, const char *target, const char *params);
-int ai_execute_configure(const char *action, const char *target, const char *params);
+/* ─── Learning ─── */
+void ai_learn_from_action(const struct intent *intent, int success);
+void ai_save_model(void);
+void ai_load_model(void);
 
-/* Workspace management */
-void ai_workspace_switch(int ws_id);
-void ai_workspace_create(const char *name);
-void ai_workspace_set_theme(const char *theme);
-void ai_workspace_set_layout(const char *layout);
-void ai_workspace_focus_mode(uint8_t enabled);
-void ai_workspace_quick_actions(void);
-
-/* Learning & memory */
-void ai_learn_pattern(const char *text, int category);
-void ai_save_memory(void);
-void ai_load_memory(void);
-float ai_get_pattern_score(const char *text, int category);
-
-/* Context awareness */
-void ai_set_context(const char *context);
-const char *ai_get_context(void);
-void ai_update_context_from_time(void);
-
-/* Voice / Natural language helpers */
-int ai_tokenize(const char *text, char tokens[][64], int max_tokens);
-int ai_stem_word(const char *word, char *stem);
-int ai_match_keywords(const char *text, const char **keywords, int num_keywords);
-
-/* History */
-void ai_add_history(const char *text, int category, int result, float confidence);
-void ai_show_history(void);
-
-/* MexaOS: Special intent handlers */
-int ai_handle_intent_coding(const char *params);
-int ai_handle_intent_focus(const char *params);
-int ai_handle_intent_creative(const char *params);
-int ai_handle_intent_calm(const char *params);
-int ai_handle_intent_organize(const char *params);
-int ai_handle_intent_search(const char *params);
-
-/* System state queries */
-void ai_system_status(void);
-void ai_system_usage(void);
-
-/* Status */
-void ai_engine_status(void);
-
-#endif /* AI_ENGINE_H */
+#endif
