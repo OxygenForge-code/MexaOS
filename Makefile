@@ -25,7 +25,6 @@ QEMU        := qemu-system-x86_64
 GRUB_MKRESCUE := grub-mkrescue
 
 # ─── Flags ───
-# Boot files = binary format, Kernel asm = elf64
 BOOT_ASFLAGS := -f bin
 KERN_ASFLAGS := -f elf64 -D__MEXAOS_BUILD__=$(BUILD)
 
@@ -40,9 +39,6 @@ CFLAGS      := -m64 -ffreestanding -O2 -Wall -Wextra \
 LDFLAGS     := -m elf_x86_64 -T $(KERN_DIR)/linker.ld -nostdlib
 
 # ─── Source Files ───
-# boot.asm ve stage2.asm BINARY olarak derlenecek
-# isr.asm ELF64 olarak kernel ile link edilecek
-
 C_SRCS      := $(KERN_DIR)/kmain.c \
                $(KERN_DIR)/vga.c \
                $(KERN_DIR)/interrupt.c \
@@ -100,7 +96,7 @@ $(OUT_DIR)/$(TARGET).bin: $(OBJS) $(KERN_DIR)/linker.ld | $(OUT_DIR)
 	@echo "  LD    $@"
 	@$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-# ─── Create floppy/disk image with boot sector + stage2 + kernel ───
+# ─── Create floppy/disk image ───
 $(OUT_DIR)/disk.img: $(OUT_DIR)/boot.bin $(OUT_DIR)/stage2.bin $(OUT_DIR)/$(TARGET).bin | $(OUT_DIR)
 	@echo "  IMG   $@"
 	@dd if=/dev/zero of=$@ bs=512 count=2880 2>/dev/null
@@ -108,7 +104,7 @@ $(OUT_DIR)/disk.img: $(OUT_DIR)/boot.bin $(OUT_DIR)/stage2.bin $(OUT_DIR)/$(TARG
 	@dd if=$(OUT_DIR)/stage2.bin of=$@ bs=512 seek=1 conv=notrunc 2>/dev/null
 	@dd if=$(OUT_DIR)/$(TARGET).bin of=$@ bs=512 seek=9 conv=notrunc 2>/dev/null
 
-# ─── Create ISO with GRUB (fallback) ───
+# ─── Create ISO with GRUB ───
 $(OUT_DIR)/$(TARGET).iso: $(OUT_DIR)/$(TARGET).bin $(KERN_DIR)/grub.cfg | $(ISO_DIR)
 	@echo "  ISO   $@"
 	@cp $(OUT_DIR)/$(TARGET).bin $(ISO_DIR)/boot/$(TARGET).bin
@@ -119,7 +115,7 @@ $(OUT_DIR)/$(TARGET).iso: $(OUT_DIR)/$(TARGET).bin $(KERN_DIR)/grub.cfg | $(ISO_
 	 (echo "  Note: Creating flat binary fallback..." && \
 	  cp $(OUT_DIR)/$(TARGET).bin $@)
 
-# ─── Run in QEMU (with custom boot) ───
+# ─── Run in QEMU ───
 run: $(OUT_DIR)/disk.img
 	@echo "  QEMU  MexaOS v$(VERSION) (Build $(BUILD))"
 	@$(QEMU) -m 512M \
