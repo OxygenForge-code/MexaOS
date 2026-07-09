@@ -73,6 +73,8 @@ struct page_table {
     pml4e_t *pml4;
 };
 
+extern struct page_table kernel_page_table;
+
 /* ─── Slab Cache ─── */
 struct slab_cache {
     uint32_t size;
@@ -104,6 +106,7 @@ void vmm_switch_page_table(struct page_table *pt);
 struct page_table *vmm_create_page_table(void);
 void vmm_destroy_page_table(struct page_table *pt);
 int vmm_map_page(struct page_table *pt, virt_addr_t vaddr, phys_addr_t paddr, uint64_t flags);
+virt_addr_t vmm_alloc_region(struct page_table *pt, size_t pages, uint64_t flags);
 
 void heap_init(void);
 void *kmalloc(size_t size);
