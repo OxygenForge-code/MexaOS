@@ -2,10 +2,15 @@
  *  MexaOS Keyboard Driver
  *  PS/2 keyboard with full keymap, modifiers, and AI shortcut
  * ============================================================ */
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 
+#include "../../include/mexaos.h"
 #include "include/keyboard.h"
 #include "include/interrupt.h"
 #include "include/vga.h"
+#include "include/memory.h"
 
 static struct {
     uint8_t shift_pressed;
