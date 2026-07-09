@@ -1,18 +1,19 @@
 /* ============================================================
- *  MexaOS Serial Port Header
+ *  MexaOS Serial Port Driver
  * ============================================================ */
 
-#ifndef SERIAL_H
-#define SERIAL_H
+#ifndef MEXAOS_SERIAL_H
+#define MEXAOS_SERIAL_H
 
-#include "../../include/mexaos.h"
+#include <stdint.h>
+
+#define SERIAL_COM1 0x3F8
+#define SERIAL_COM2 0x2F8
+#define SERIAL_COM3 0x3E8
+#define SERIAL_COM4 0x2E8
 
 void serial_init(uint16_t port);
-void serial_putc(uint16_t port, char c);
-void serial_puts(uint16_t port, const char *s);
-char serial_getc(uint16_t port);
-void serial_put_hex(uint16_t port, uint64_t val);
-void serial_put_dec(uint16_t port, uint64_t val);
-int serial_is_available(void);
+void serial_putchar(char c);
+void serial_puts(const char *s);
 
-#endif /* SERIAL_H */
+#endif
