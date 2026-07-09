@@ -35,8 +35,8 @@ struct idt_entry {
     uint32_t reserved;
 } __attribute__((packed));
 
-/* ─── IDT Pointer ─── */
-struct idt_ptr {
+/* ─── IDT Descriptor (interrupt.c ile uyumlu) ─── */
+struct idt_descriptor {
     uint16_t limit;
     uint64_t base;
 } __attribute__((packed));
@@ -80,7 +80,7 @@ static const char *exception_names[] __attribute__((unused)) = {
     "Reserved"
 };
 
-/* ─── ISR Stubs (defined in isr.asm) ─── */
+/* ─── ISR Stubs ─── */
 extern void isr0(void);  extern void isr1(void);
 extern void isr2(void);  extern void isr3(void);
 extern void isr4(void);  extern void isr5(void);
@@ -114,7 +114,7 @@ extern void isr128(void);
 /* ─── Functions ─── */
 void idt_init(void);
 void idt_set_gate(uint8_t num, uint64_t handler, uint8_t type, uint8_t dpl);
-void idt_load(struct idt_ptr *ptr);
+void idt_load(struct idt_descriptor *desc);
 
 void pic_init(void);
 void pic_send_eoi(uint8_t irq);
