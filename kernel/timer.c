@@ -3,10 +3,15 @@
  *  PIT-based 1ms tick timer with MexaOS uptime tracking
  * ============================================================ */
 
+#include <stdint.h>
+#include <stddef.h>
+
 #include "include/timer.h"
 #include "include/interrupt.h"
 #include "include/vga.h"
 #include "include/serial.h"
+#include "include/memory.h"
+#include "../../include/mexaos.h"
 
 static volatile uint64_t timer_ticks = 0;
 static volatile uint64_t timer_seconds = 0;
@@ -41,7 +46,7 @@ void timer_init(uint32_t freq) {
     outb(0x43, 0x36);
     outb(0x40, divisor & 0xFF);
     outb(0x40, (divisor >> 8) & 0xFF);
-    irq_register_handler(0, timer_irq_handler);
+    register_irq_handler(0, timer_irq_handler);
     pic_unmask_irq(0);
     timer_ticks = 0; timer_seconds = 0; timer_ms = 0;
     for (int i = 0; i < MAX_TIMER_CALLBACKS; i++) timer_callbacks[i].active = 0;
@@ -54,12 +59,16 @@ uint64_t timer_get_uptime(void) { return timer_ticks; }
 
 void timer_sleep_ms(uint64_t ms) {
     uint64_t start = timer_ms;
-    while (timer_ms - start < ms) pause();
+    while (timer_ms - start < ms) {
+        __asm__ __volatile__("pause");
+    }
 }
 
 void timer_sleep_ticks(uint64_t ticks) {
     uint64_t start = timer_ticks;
-    while (timer_ticks - start < ticks) pause();
+    while (timer_ticks - start < ticks) {
+        __asm__ __volatile__("pause");
+    }
 }
 
 int timer_register_callback(void (*fn)(void), uint64_t interval_ms) {
