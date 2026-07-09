@@ -3,10 +3,17 @@
  *  Round-robin with priority + intent-driven process creation
  * ============================================================ */
 
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+
+#include "../../include/mexaos.h"
 #include "include/process.h"
-#include "include/memory.h"
+#include "include/interrupt.h"
 #include "include/vga.h"
 #include "include/timer.h"
+#include "include/memory.h"
+
 
 static struct process process_table[MAX_PROCESSES];
 static struct process *current_process = NULL;
