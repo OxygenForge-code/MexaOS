@@ -3,6 +3,7 @@
  *  IDT setup, ISR/IRQ handlers with MexaOS themed output
  * ============================================================ */
 
+#include "../../include/mexaos.h"
 #include "include/interrupt.h"
 #include "include/vga.h"
 
