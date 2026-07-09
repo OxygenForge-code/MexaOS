@@ -48,7 +48,7 @@ void isr_handler(struct interrupt_frame *frame);
 void irq_handler(struct interrupt_frame *frame);
 
 /* ─── Exception Messages (MexaOS themed) ─── */
-static const char *exception_names[] = {
+static const char *exception_names[] __attribute__((unused)) = {
     "Divide by Zero",
     "Debug",
     "Non-Maskable Interrupt",
