@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MexaOS — The Operating System That Understands Intent</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js">
+    </script>
+    <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050507;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            cursor: default;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Aurora */
+        .aurora-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0.55;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.45;
+            animation: float 22s infinite ease-in-out;
+        }
+        .orb-1 {
+            width: 700px;
+            height: 700px;
+            background: #4f46e5;
+            top: -15%;
+            left: -15%;
+            animation-delay: 0s;
+        }
+        .orb-2 {
+            width: 550px;
+            height: 550px;
+            background: #ec4899;
+            bottom: -15%;
+            right: -15%;
+            animation-delay: -7s;
+        }
+        .orb-3 {
+            width: 450px;
+            height: 450px;
+            background: #06b6d4;
+            top: 45%;
+            left: 50%;
+            animation-delay: -14s;
+        }
+        .orb-4 {
+            width: 350px;
+            height: 350px;
+            background: #f59e0b;
+            top: 20%;
+            right: 25%;
+            animation-delay: -3s;
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(40px, -60px) scale(1.15);
+            }
+            50% {
+                transform: translate(-25px, 30px) scale(0.85);
+            }
+            75% {
+                transform: translate(15px, 50px) scale(1.05);
+            }
+        }
+
+        /* Glass */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            letter-spacing: -0.03em;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #c4b5fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gradient-text-warm {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 7.5rem);
+            line-height: 1.08;
+            font-weight: 700;
+        }
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.7rem);
+            color: var(--text-secondary);
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(60px);
+        }
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 18px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            margin: 5px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .tech-badge:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .os-window {
+            aspect-ratio: 16/10;
+            background-size: cover;
+            background-position: center;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .os-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.35) 100%);
+            pointer-events: none;
+        }
+        .command-input-container {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 620px;
+            z-index: 10;
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease;
+        }
+        .loader-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .loader-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+            width: 0%;
+            animation: loadBar 1.5s ease forwards;
+        }
+        @keyframes loadBar {
+            to {
+                width: 100%;
+            }
+        }
+
+        .download-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 0 35px rgba(99, 102, 241, 0.35);
+        }
+        .download-btn:hover {
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.65);
+            transform: translateY(-4px);
+        }
+        .download-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .download-btn:hover::after {
+            opacity: 1;
+        }
+
+        .platform-card {
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .platform-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+        }
+        .platform-card.active {
+            border-color: #818cf8 !important;
+            box-shadow: 0 0 50px rgba(99, 102, 241, 0.5);
+            background: rgba(99, 102, 241, 0.08);
+        }
+        .platform-card .check-mark {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .platform-card.active .check-mark {
+            opacity: 1;
+        }
+
+        /* FAQ Accordion */
+        .faq-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), padding 0.5s;
+        }
+        .faq-item.open .faq-answer {
+            max-height: 300px;
+            padding-bottom: 20px;
+        }
+        .faq-chevron {
+            transition: transform 0.4s;
+        }
+        .faq-item.open .faq-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9998;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 0.9rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: none;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Back to top */
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 9997;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s;
+            pointer-events: none;
+        }
+        #back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        #back-to-top:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Pulse ring for demo */
+        .pulse-ring {
+            animation: pulseRing 2.5s infinite;
+        }
+        @keyframes pulseRing {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(99, 102, 241, 0);
+            }
+        }
+
+        /* Stats counter */
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="text-white text-3xl tracking-widest font-bold">MexaOS</div>
+        <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+        <p class="text-gray-500 text-xs mt-3 tracking-wide">Booting intelligence...</p>
+    </div>
+
+    <!-- Aurora Background -->
+    <div class="aurora-canvas" id="aurora">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Back to Top -->
+    <div id="back-to-top" title="Back to top">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-5 flex justify-between items-center transition-all duration-500" id="navbar">
+        <a href="#" class="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity">MexaOS</a>
+        <div class="hidden lg:flex gap-8 text-sm font-medium opacity-80">
+            <a href="#vision" class="hover:text-white transition-colors">Vision</a>
+            <a href="#intelligence" class="hover:text-white transition-colors">Intelligence</a>
+            <a href="#download" class="hover:text-white transition-colors">Download</a>
+            <a href="#demo" class="hover:text-white transition-colors">Demo</a>
+            <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+        </div>
+        <a href="https://mexaos.com/download" class="download-btn px-5 py-2.5 rounded-full bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition-all">
+            Download v2.0
+        </a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="min-h-screen flex flex-col justify-center items-center text-center px-4 relative pt-20">
+        <div class="reveal-up">
+            <div class="inline-block mb-6 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
+                ✦ Now available — No waitlist
+            </div>
+            <h1 class="hero-title mb-6">
+                An OS That<br>
+                <span class="gradient-text">Understands You.</span>
+            </h1>
+            <p class="hero-subtitle mb-10 reveal-up">
+                No settings panels. No confusing menus. Just describe what you want — MexaOS adapts instantly.
+            </p>
+            <div class="reveal-up flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="https://mexaos.com/download" class="download-btn group relative px-9 py-4 rounded-full bg-indigo-600 border border-indigo-500/50 overflow-hidden transition-all">
+                    <span class="relative z-10 text-lg font-semibold tracking-wide text-white flex items-center gap-2">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Download Free
+                    </span>
+                </a>
+                <a href="#demo" class="px-9 py-4 rounded-full bg-white/8 border border-white/15 backdrop-blur-md hover:bg-white/16 transition-all text-lg font-medium">
+                    ▶ Live Demo
+                </a>
+            </div>
+            <div class="mt-8 text-xs text-gray-500 reveal-up">Available for Windows • macOS • Linux</div>
+        </div>
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 opacity-40 animate-bounce">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+        </div>
+    </section>
+
+    <!-- Vision -->
+    <section id="vision" class="py-32 px-6 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="reveal-left">
+                <h2 class="text-4xl md:text-6xl font-bold mb-8 leading-tight">Intent over<br>Settings.</h2>
+                <p class="text-xl text-gray-400 mb-8 leading-relaxed">
+                    MexaOS is the world's first intent-driven operating system. No more digging through menus — just express what you need, and the system reshapes itself around you.
+                </p>
+                <div class="space-y-5">
+                    <div class="glass-card p-5 flex items-start gap-4">
+                        <div class="w-11 h-11 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-300 shrink-0 text-lg">💬</div>
+                        <div><h4 class="text-lg font-semibold mb-1">Natural Language</h4><p class="text-sm text-gray-400">"Organize my desktop for video editing."</p></div>
+                    </div>
+                    <div class="glass-card p-5 flex items-start gap-4">
+                        <div class="w-11 h-11 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-300 shrink-0 text-lg">🕐</div>
+                        <div><h4 class="text-lg font-semibold mb-1">Context Memory</h4><p class="text-sm text-gray-400">"After my 3pm standup, open the sprint board."</p></div>
+                    </div>
+                    <div class="glass-card p-5 flex items-start gap-4">
+                        <div class="w-11 h-11 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-300 shrink-0 text-lg">🎨</div>
+                        <div><h4 class="text-lg font-semibold mb-1">Adaptive Themes</h4><p class="text-sm text-gray-400">Mood, weather, and focus-aware interface that changes with you.</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative reveal-right perspective-1000">
+                <div class="glass-panel p-2 transform rotate-y-10 rotate-x-5 hover:rotate-0 transition-transform duration-800 ease-out shadow-2xl">
+                    <img id="vision-img" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" alt="MexaOS Interface" class="rounded-xl w-full h-auto object-cover">
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/8 to-transparent pointer-events-none"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="py-20 px-6 border-y border-white/5">
+        <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center reveal-up">
+            <div><div class="stat-number text-4xl md:text-5xl font-bold gradient-text" data-target="500">0</div><p class="text-gray-400 text-sm mt-2">Active Models</p></div>
+            <div><div class="stat-number text-4xl md:text-5xl font-bold gradient-text" data-target="12">0</div><p class="text-gray-400 text-sm mt-2">ms Response Time</p></div>
+            <div><div class="stat-number text-4xl md:text-5xl font-bold gradient-text" data-target="99.9">0</div><p class="text-gray-400 text-sm mt-2">% Uptime</p></div>
+            <div><div class="stat-number text-4xl md:text-5xl font-bold gradient-text" data-target="250">0</div><p class="text-gray-400 text-sm mt-2">K+ Users</p></div>
+        </div>
+    </section>
+
+    <!-- Intelligence -->
+    <section id="intelligence" class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-900/8 to-transparent pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-6 text-center mb-16 reveal-up">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">Collective Intelligence Engine</h2>
+            <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                MexaOS orchestrates multiple AI systems — local and cloud — selecting the optimal model for every task while keeping your data private.
+            </p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto mb-20 reveal-up">
+            <span class="tech-badge">Gemma 3</span><span class="tech-badge">GLM-5</span><span class="tech-badge">Local SLMs</span><span class="tech-badge">Claude</span><span class="tech-badge">GPT-4o</span><span class="tech-badge">On-device Inference</span><span class="tech-badge">Vision Models</span><span class="tech-badge">Whisper</span><span class="tech-badge">Stable Diffusion</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto px-6">
+            <div class="glass-card p-8 reveal-up"><div class="text-4xl mb-4">🧠</div><h3 class="text-xl font-bold mb-3">Adaptive Learning</h3><p class="text-gray-400 text-sm leading-relaxed">Combines LLMs with behavioral ML to learn your patterns — with explicit permission — improving automation daily.</p></div>
+            <div class="glass-card p-8 reveal-up"><div class="text-4xl mb-4">⚡</div><h3 class="text-xl font-bold mb-3">Zero-Latency Local AI</h3><p class="text-gray-400 text-sm leading-relaxed">Small language models run entirely on-device for instant responses. Complex tasks seamlessly escalate to the cloud.</p></div>
+            <div class="glass-card p-8 reveal-up"><div class="text-4xl mb-4">🔒</div><h3 class="text-xl font-bold mb-3">Privacy by Architecture</h3><p class="text-gray-400 text-sm leading-relaxed">Your context and sensitive data stay on your hardware. Nothing leaves without your explicit authorization.</p></div>
+        </div>
+    </section>
+
+    <!-- Download Center -->
+    <section id="download" class="py-32 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/8 to-transparent pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 reveal-up">
+                <span class="tech-badge mb-4 inline-block text-indigo-300 border-indigo-500/30">v2.0 Beta · June 2026</span>
+                <h2 class="text-4xl md:text-6xl font-bold mb-4 gradient-text">Download Center</h2>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto">Free for personal use. Pro tier available for teams.</p>
+            </div>
+
+            <!-- Platform Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 reveal-up" id="platform-selector">
+                <div class="platform-card glass-panel p-8 text-center active" data-platform="windows">
+                    <div class="check-mark text-indigo-400">✓</div>
+                    <div class="text-5xl mb-4">🪟</div>
+                    <h3 class="text-2xl font-bold mb-2">Windows</h3>
+                    <p class="text-gray-400 text-sm mb-3">10 / 11 · x64</p>
+                    <span class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full">Stable</span>
+                    <div class="mt-4 text-sm text-gray-500">2.1 GB · Build 2240</div>
+                </div>
+                <div class="platform-card glass-panel p-8 text-center" data-platform="macos">
+                    <div class="check-mark text-indigo-400">✓</div>
+                    <div class="text-5xl mb-4">🍎</div>
+                    <h3 class="text-2xl font-bold mb-2">macOS</h3>
+                    <p class="text-gray-400 text-sm mb-3">Apple Silicon · Intel</p>
+                    <span class="text-xs bg-yellow-500/20 text-yellow-300 px-3 py-1 rounded-full">Preview</span>
+                    <div class="mt-4 text-sm text-gray-500">1.8 GB · Build 2238</div>
+                </div>
+                <div class="platform-card glass-panel p-8 text-center" data-platform="linux">
+                    <div class="check-mark text-indigo-400">✓</div>
+                    <div class="text-5xl mb-4">🐧</div>
+                    <h3 class="text-2xl font-bold mb-2">Linux</h3>
+                    <p class="text-gray-400 text-sm mb-3">AppImage · Deb · RPM</p>
+                    <span class="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">Beta</span>
+                    <div class="mt-4 text-sm text-gray-500">1.5 GB · Build 2239</div>
+                </div>
+            </div>
+
+            <!-- Main Download Button -->
+            <div class="text-center reveal-up mb-10">
+                <a id="main-download-btn" href="https://mexaos.com/download/windows" class="download-btn inline-flex items-center gap-3 px-12 py-5 rounded-full bg-indigo-600 text-white text-xl font-semibold hover:bg-indigo-500 transition-all pulse-ring">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span id="download-label">Download for Windows</span>
+                </a>
+                <p class="text-gray-500 text-sm mt-4 cursor-pointer hover:text-gray-300 transition-colors" id="download-hash">SHA256: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 <span class="text-xs opacity-60">(click to copy)</span></p>
+                <div class="flex justify-center gap-4 mt-4 text-xs text-gray-500">
+                    <a href="#" class="hover:text-white transition-colors">Mirror 1</a><span>·</span>
+                    <a href="#" class="hover:text-white transition-colors">Mirror 2</a><span>·</span>
+                    <a href="#" class="hover:text-white transition-colors">Torrent</a>
+                </div>
+            </div>
+
+            <!-- Edition Comparison -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-10 reveal-up">
+                <div class="glass-card p-8">
+                    <h3 class="text-xl font-bold mb-2">🆓 MexaOS Free</h3>
+                    <p class="text-gray-400 text-sm mb-4">For personal use</p>
+                    <ul class="text-sm text-gray-300 space-y-2">
+                        <li>✓ Full intent engine</li><li>✓ 5 local AI models</li><li>✓ Basic themes</li><li>✓ Community support</li>
+                    </ul>
+                    <p class="text-3xl font-bold mt-4">$0</p>
+                </div>
+                <div class="glass-card p-8 border-indigo-500/30">
+                    <h3 class="text-xl font-bold mb-2">🚀 MexaOS Pro</h3>
+                    <p class="text-gray-400 text-sm mb-4">For professionals & teams</p>
+                    <ul class="text-sm text-gray-300 space-y-2">
+                        <li>✓ Everything in Free</li><li>✓ Unlimited AI models</li><li>✓ Advanced automation</li><li>✓ Priority support</li><li>✓ Team collaboration</li>
+                    </ul>
+                    <p class="text-3xl font-bold mt-4">$12<span class="text-sm text-gray-400">/mo</span></p>
+                </div>
+            </div>
+
+            <!-- System Requirements -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto reveal-up">
+                <div class="glass-card p-8">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">🖥️ Minimum</h3>
+                    <ul class="text-sm text-gray-400 space-y-2">
+                        <li>• 8 GB RAM</li><li>• 4-core CPU (x86-64 / ARM64)</li><li>• 25 GB SSD</li><li>• GPU with 2 GB VRAM</li>
+                    </ul>
+                </div>
+                <div class="glass-card p-8">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">⚡ Recommended</h3>
+                    <ul class="text-sm text-gray-400 space-y-2">
+                        <li>• 32 GB RAM</li><li>• 8+ core CPU</li><li>• 100 GB NVMe SSD</li><li>• GPU with 8+ GB VRAM</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo -->
+    <section id="demo" class="py-32 px-6 max-w-6xl mx-auto">
+        <div class="text-center mb-12 reveal-up">
+            <h2 class="text-3xl md:text-5xl font-bold mb-4">See It In Action</h2>
+            <p class="text-gray-400 text-lg">Type commands to reshape the environment in real time.</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-4 text-xs text-gray-500">
+                <span class="cursor-pointer hover:text-white transition-colors cmd-suggestion">"Prepare for coding"</span>
+                <span>·</span>
+                <span class="cursor-pointer hover:text-white transition-colors cmd-suggestion">"Focus mode"</span>
+                <span>·</span>
+                <span class="cursor-pointer hover:text-white transition-colors cmd-suggestion">"Creative studio"</span>
+                <span>·</span>
+                <span class="cursor-pointer hover:text-white transition-colors cmd-suggestion">"Dark calm"</span>
+            </div>
+        </div>
+
+        <div class="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10 reveal-scale group">
+            <div id="os-screen" class="os-window" style="background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);">
+                <div class="os-overlay"></div>
+                <div id="ui-layer" class="absolute inset-0 p-8 flex flex-col justify-between transition-all duration-700" style="filter: brightness(1);">
+                    <div class="flex justify-between items-center opacity-80">
+                        <div class="text-xs font-mono tracking-wider">MEXAOS v2.0</div>
+                        <div class="flex gap-2 items-center">
+                            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                            <div class="text-xs">CONNECTED</div>
+                        </div>
+                    </div>
+                    <div id="center-content" class="self-center text-center opacity-0 transition-opacity duration-500">
+                        <div class="text-7xl mb-4">✨</div>
+                        <div class="text-2xl font-light tracking-wide">Ready</div>
+                    </div>
+                    <div class="opacity-60 text-xs text-center">Try commands above ↑</div>
+                </div>
+            </div>
+            <div class="command-input-container">
+                <div class="glass-panel px-5 py-3.5 flex items-center gap-3 shadow-2xl ring-1 ring-white/20 focus-within:ring-indigo-400/60 transition-all">
+                    <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                    <input type="text" id="cmd-input" placeholder="Describe what you want..." class="bg-transparent border-none outline-none text-white w-full placeholder-gray-500 font-light text-base">
+                    <kbd class="text-xs text-gray-500 bg-white/5 px-2 py-1 rounded hidden sm:inline-block">Enter ↵</kbd>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery -->
+    <section id="interface" class="py-32 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-16 reveal-up">
+                <h2 class="text-4xl md:text-6xl font-bold mb-6">Alive. Adaptive.<br>Yours.</h2>
+                <p class="text-xl text-gray-400">Themes shift with your mood, the weather, time of day, and your focus state.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="col-span-1 md:col-span-2 row-span-2 relative group overflow-hidden rounded-3xl reveal-up">
+                    <img id="gallery-main" src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2670&auto=format&fit=crop" alt="Cinematic Lighting" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-8 flex flex-col justify-end"><h3 class="text-2xl font-bold mb-2">Cinematic Lighting</h3><p class="text-gray-300">Dynamic shadows that respond to your content.</p></div>
+                </div>
+                <div class="relative group overflow-hidden rounded-3xl h-64 reveal-up">
+                    <img id="gallery-sub-1" src="https://images.unsplash.com/photo-1614726365723-49faaa5646f8?q=80&w=2568&auto=format&fit=crop" alt="Widgets" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-black/40 hover:bg-black/20 transition-colors p-6 flex flex-col justify-end"><h4 class="font-bold">Smart Widgets</h4></div>
+                </div>
+                <div class="relative group overflow-hidden rounded-3xl h-64 reveal-up">
+                    <img id="gallery-sub-2" src="https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=2532&auto=format&fit=crop" alt="Night Mode" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-black/40 hover:bg-black/20 transition-colors p-6 flex flex-col justify-end"><h4 class="font-bold">Circadian Rhythm</h4></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-32 px-6 max-w-4xl mx-auto">
+        <div class="text-center mb-16 reveal-up">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">Frequently Asked</h2>
+            <p class="text-gray-400 text-lg">Everything you need to know about MexaOS.</p>
+        </div>
+        <div class="space-y-0 reveal-up">
+            <div class="faq-item">
+                <button class="w-full text-left py-5 flex justify-between items-center text-lg font-medium hover:text-indigo-300 transition-colors">
+                    Is MexaOS really free?
+                    <svg class="faq-chevron w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="faq-answer text-gray-400 text-sm leading-relaxed pr-8">Yes! MexaOS Free includes the full intent engine, 5 local AI models, and all core features. The Pro tier ($12/mo) adds unlimited models, advanced automation, team collaboration, and priority support.</div>
+            </div>
+            <div class="faq-item">
+                <button class="w-full text-left py-5 flex justify-between items-center text-lg font-medium hover:text-indigo-300 transition-colors">
+                    Does it work offline?
+                    <svg class="faq-chevron w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="faq-answer text-gray-400 text-sm leading-relaxed pr-8">Absolutely. Local SLMs handle most tasks entirely offline. Cloud models are only called for complex reasoning when you're connected — and you control when that happens.</div>
+            </div>
+            <div class="faq-item">
+                <button class="w-full text-left py-5 flex justify-between items-center text-lg font-medium hover:text-indigo-300 transition-colors">
+                    How is my privacy protected?
+                    <svg class="faq-chevron w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="faq-answer text-gray-400 text-sm leading-relaxed pr-8">By design. Your personal context, files, and behavior patterns are processed locally. Cloud requests are anonymized and stripped of identifiable data. You can audit every outbound request.</div>
+            </div>
+            <div class="faq-item">
+                <button class="w-full text-left py-5 flex justify-between items-center text-lg font-medium hover:text-indigo-300 transition-colors">
+                    Can I customize which AI models are used?
+                    <svg class="faq-chevron w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="faq-answer text-gray-400 text-sm leading-relaxed pr-8">Yes — Pro users can configure model routing, set preferences, and even bring their own API keys for services like Claude or GPT-4o. Full control over the AI stack.</div>
+            </div>
+            <div class="faq-item">
+                <button class="w-full text-left py-5 flex justify-between items-center text-lg font-medium hover:text-indigo-300 transition-colors">
+                    What are the system requirements?
+                    <svg class="faq-chevron w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="faq-answer text-gray-400 text-sm leading-relaxed pr-8">Minimum: 8 GB RAM, 4-core CPU, 25 GB SSD, GPU with 2 GB VRAM. Recommended: 32 GB RAM, 8+ core CPU, 100 GB NVMe SSD, GPU with 8+ GB VRAM for the best local AI experience.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="py-24 px-6 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-900/10 to-transparent pointer-events-none"></div>
+        <div class="max-w-xl mx-auto reveal-up relative z-10">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Stay Updated</h2>
+            <p class="text-gray-400 mb-8">Get release notes, tips, and early access to new features.</p>
+            <form class="flex gap-3 max-w-md mx-auto" onsubmit="event.preventDefault(); showToast('Subscribed! Welcome to the future.');">
+                <input type="email" placeholder="you@email.com" class="flex-1 bg-white/5 border border-white/15 rounded-full px-5 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-400/50 transition-colors text-sm">
+                <button type="submit" class="px-6 py-3 rounded-full bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-500 transition-all shrink-0">Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/8 py-16 px-6 bg-black/60 backdrop-blur-lg">
+        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+            <div>
+                <div class="text-xl font-bold mb-3">MexaOS</div>
+                <p class="text-gray-500 text-xs leading-relaxed">The intent-driven operating system. Built for humans, powered by AI.</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold mb-3 text-gray-300">Product</h4>
+                <div class="space-y-2 text-xs text-gray-500"><a href="#" class="block hover:text-white transition-colors">Features</a><a href="#" class="block hover:text-white transition-colors">Pricing</a><a href="#" class="block hover:text-white transition-colors">Download</a><a href="#" class="block hover:text-white transition-colors">Roadmap</a></div>
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold mb-3 text-gray-300">Company</h4>
+                <div class="space-y-2 text-xs text-gray-500"><a href="#" class="block hover:text-white transition-colors">About</a><a href="#" class="block hover:text-white transition-colors">Blog</a><a href="#" class="block hover:text-white transition-colors">Careers</a><a href="#" class="block hover:text-white transition-colors">Contact</a></div>
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold mb-3 text-gray-300">Legal</h4>
+                <div class="space-y-2 text-xs text-gray-500"><a href="#" class="block hover:text-white transition-colors">Privacy Policy</a><a href="#" class="block hover:text-white transition-colors">Terms of Service</a><a href="#" class="block hover:text-white transition-colors">License</a></div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-600 text-xs">© 2026 MexaOS Inc. All rights reserved.</p>
+            <div class="flex gap-4 text-gray-500 text-xs">
+                <span>🇺🇸 English</span>
+                <span class="opacity-40">|</span>
+                <span>Build 2240 · v2.0 Beta</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Loader
+        window.addEventListener('load', () => {
+            gsap.to('#loader', {
+                opacity: 0,
+                duration: 0.8,
+                delay: 0.6,
+                onComplete: () => {
+                    const loader = document.getElementById('loader');
+                    if (loader) loader.remove();
+                }
+            });
+            gsap.from('.hero-title', { y: 120, opacity: 0, duration: 1.6, ease: 'power4.out' });
+            gsap.from('.hero-subtitle', { y: 60, opacity: 0, duration: 1.4, delay: 0.25, ease: 'power4.out' });
+        });
+
+        // Scroll Reveals
+        const revealSelectors = ['.reveal-up', '.reveal-left', '.reveal-right', '.reveal-scale'];
+        revealSelectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                const props = { y: 0, x: 0, opacity: 1, scale: 1 };
+                if (sel === '.reveal-left') props.x = 0;
+                if (sel === '.reveal-right') props.x = 0;
+                if (sel === '.reveal-scale') props.scale = 1;
+                gsap.to(el, {
+                    scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none reverse" },
+                    ...props,
+                    duration: 1,
+                    ease: "power3.out"
+                });
+            });
+        });
+
+        // Parallax Aurora
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 25;
+            const y = (e.clientY / window.innerHeight) * 25;
+            gsap.to('.orb-1', { x: x, y: y, duration: 2.5, ease: 'power1.out' });
+            gsap.to('.orb-2', { x: -x, y: -y, duration: 2.5, ease: 'power1.out' });
+            gsap.to('.orb-3', { x: x * 0.6, y: y * 0.6, duration: 2.5, ease: 'power1.out' });
+            gsap.to('.orb-4', { x: -x * 0.4, y: y * 0.4, duration: 2.5, ease: 'power1.out' });
+        });
+
+        // Navbar background on scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(5,5,7,0.85)';
+                navbar.style.backdropFilter = 'blur(20px)';
+                navbar.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+            } else {
+                navbar.style.background = 'transparent';
+                navbar.style.backdropFilter = 'none';
+                navbar.style.borderBottom = 'none';
+            }
+        });
+
+        // Back to top
+        const backToTop = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            backToTop.classList.toggle('visible', window.scrollY > 600);
+        });
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Stats Counter Animation
+        const statNumbers = document.querySelectorAll('.stat-number[data-target]');
+        const statsAnimated = new Set();
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !statsAnimated.has(entry.target)) {
+                    statsAnimated.add(entry.target);
+                    const target = parseFloat(entry.target.dataset.target);
+                    const isDecimal = target % 1 !== 0;
+                    const duration = 2000;
+                    const startTime = performance.now();
+
+                    function update(now) {
+                        const elapsed = now - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const eased = 1 - Math.pow(1 - progress, 3);
+                        const current = target * eased;
+                        entry.target.textContent = isDecimal ? current.toFixed(1) : Math.floor(current);
+                        if (progress < 1) requestAnimationFrame(update);
+                        else entry.target.textContent = isDecimal ? target.toFixed(1) : target;
+                    }
+                    requestAnimationFrame(update);
+                }
+            });
+        }, { threshold: 0.5 });
+        statNumbers.forEach(el => observer.observe(el));
+
+        // Interactive Demo
+        const cmdInput = document.getElementById('cmd-input');
+        const osScreen = document.getElementById('os-screen');
+        const uiLayer = document.getElementById('ui-layer');
+        const centerContent = document.getElementById('center-content');
+        const states = {
+            default: { bg: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', filter: 'brightness(1)', text: 'Ready',
+                emoji: '✨' },
+            coding: { bg: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)', filter: 'brightness(0.85) contrast(1.15)',
+                text: 'Dev Environment Active', emoji: '💻' },
+            focus: { bg: 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)',
+            filter: 'blur(1.5px) brightness(0.7)', text: 'Deep Focus — Distractions Blocked', emoji: '🧘' },
+            creative: { bg: 'linear-gradient(135deg, #4c1d95 0%, #be185d 100%)', filter: 'saturate(1.4) brightness(1.05)',
+                text: 'Creative Studio Loaded', emoji: '🎨' },
+            calm: { bg: 'linear-gradient(135deg, #064e3b 0%, #0f172a 100%)', filter: 'brightness(0.75) sepia(0.2)',
+                text: 'Calm Evening Mode', emoji: '🌙' }
+        };
+
+        function applyDemoState(stateKey) {
+            const state = states[stateKey] || states.default;
+            gsap.to(osScreen, {
+                background: state.bg,
+                duration: 0.6,
+                ease: 'power2.inOut'
+            });
+            gsap.to(uiLayer, { filter: state.filter, duration: 0.6, ease: 'power2.inOut' });
+            centerContent.querySelector('div:first-child').textContent = state.emoji;
+            centerContent.querySelector('div:last-child').textContent = state.text;
+            gsap.fromTo(centerContent, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5,
+                ease: 'back.out(1.7)' });
+            setTimeout(() => gsap.to(centerContent, { opacity: 0, duration: 0.5 }), 2500);
+        }
+
+        cmdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const val = cmdInput.value.toLowerCase();
+                if (val.includes('cod') || val.includes('program') || val.includes('dev')) applyDemoState(
+                    'coding');
+                else if (val.includes('focus') || val.includes('calm') || val.includes('quiet') || val.includes(
+                    'dark')) applyDemoState(val.includes('dark') || val.includes('calm') ? 'calm' : 'focus');
+                else if (val.includes('creat') || val.includes('design') || val.includes('art') || val.includes(
+                    'studio')) applyDemoState('creative');
+                else applyDemoState('default');
+                cmdInput.value = '';
+            }
+        });
+
+        // Clickable suggestions
+        document.querySelectorAll('.cmd-suggestion').forEach(el => {
+            el.addEventListener('click', () => {
+                cmdInput.value = el.textContent.replace(/"/g, '');
+                cmdInput.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter' }));
+            });
+        });
+
+        // Download Center
+        const platformCards = document.querySelectorAll('.platform-card');
+        const mainDownloadBtn = document.getElementById('main-download-btn');
+        const downloadLabel = document.getElementById('download-label');
+        const downloadHash = document.getElementById('download-hash');
+        const platformData = {
+            windows: { label: 'Download for Windows', url: 'https://mexaos.com/download/windows',
+                hash: 'SHA256: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0' },
+            macos: { label: 'Download for macOS', url: 'https://mexaos.com/download/macos',
+                hash: 'SHA256: b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1' },
+            linux: { label: 'Download for Linux', url: 'https://mexaos.com/download/linux',
+                hash: 'SHA256: c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2' }
+        };
+
+        platformCards.forEach(card => {
+            card.addEventListener('click', () => {
+                platformCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                const platform = card.dataset.platform;
+                const data = platformData[platform];
+                gsap.to(mainDownloadBtn, { scale: 0.93, duration: 0.12, onComplete: () => {
+                        mainDownloadBtn.href = data.url;
+                        downloadLabel.textContent = data.label;
+                        downloadHash.innerHTML =
+                            `${data.hash} <span class="text-xs opacity-60">(click to copy)</span>`;
+                        gsap.to(mainDownloadBtn, { scale: 1, duration: 0.35, ease: 'back.out(1.7)' });
+                    } });
+            });
+        });
+
+        downloadHash.addEventListener('click', () => {
+            const activePlatform = document.querySelector('.platform-card.active')?.dataset?.platform ||
+                'windows';
+            const hash = platformData[activePlatform].hash.replace('SHA256: ', '');
+            navigator.clipboard.writeText(hash).then(() => showToast('✓ Hash copied to clipboard'));
+        });
+
+        // FAQ Accordion
+        document.querySelectorAll('.faq-item button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const wasOpen = item.classList.contains('open');
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+                if (!wasOpen) item.classList.add('open');
+            });
+        });
+
+        // Image injection
+        const imgMap = {
+            'vision-img': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop',
+            'gallery-main': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2670&auto=format&fit=crop',
+            'gallery-sub-1': 'https://images.unsplash.com/photo-1614726365723-49faaa5646f8?q=80&w=2568&auto=format&fit=crop',
+            'gallery-sub-2': 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=2532&auto=format&fit=crop'
+        };
+        Object.keys(imgMap).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.src = imgMap[id];
+        });
+    </script>
+</body>
+</html>
