@@ -61,29 +61,44 @@ struct vga_state {
 #define vga_entry_color(fg, bg) ((fg) | ((bg) << 4))
 #define vga_entry(uc, color)    ((uint16_t)(uc) | ((uint16_t)(color) << 8))
 
-/* ─── Functions ─── */
+/* ─── Basic Functions ─── */
 void vga_init(void);
 void vga_clear(void);
 void vga_putchar(char c);
 void vga_puts(const char *s);
 void vga_setcolor(uint8_t fg, uint8_t bg);
 
+/* ─── Cursor ─── */
 void vga_early_init(void);
 void vga_cursor_show(void);
 void vga_cursor_hide(void);
 void vga_cursor_set(uint32_t row, uint32_t col);
 void vga_update_cursor(void);
+
+/* ─── Position & Echo ─── */
 void vga_set_echo(uint8_t enabled);
 void vga_gotoxy(uint32_t x, uint32_t y);
 void vga_getxy(uint32_t *x, uint32_t *y);
 
+/* ─── Scrolling ─── */
 void vga_scroll(void);
+
+/* ─── Drawing ─── */
 void vga_draw_box(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t color);
 void vga_draw_line_h(uint32_t x, uint32_t y, uint32_t len, uint8_t color);
 void vga_draw_line_v(uint32_t x, uint32_t y, uint32_t len, uint8_t color);
 void vga_fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t color);
 
+/* ─── Accent & Splash ─── */
 void vga_set_accent(uint8_t color);
 void vga_splash_screen(void);
+
+/* ─── Number Printing ─── */
+void vga_print_dec(uint64_t n);
+void vga_print_hex(uint64_t n);
+void vga_print_size(uint64_t bytes);
+
+/* ─── Logo ─── */
+void vga_draw_logo(void);
 
 #endif
