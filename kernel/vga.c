@@ -1,4 +1,4 @@
- ============================================================
+/* ============================================================
  *  MexaOS VGA Driver
  *  Hardware text mode with MexaOS indigo theme
  * ============================================================ */
@@ -40,7 +40,6 @@ void vga_early_init(void) {
     vga.cursor_visible = 1;
     vga.echo_enabled = 1;
     
-    /* Disable VGA blink bit for bright background colors */
     inb(VGA_CTRL_PORT);
     outb(VGA_CTRL_PORT, 0x0A);
     uint8_t cur_start = inb(VGA_DATA_PORT);
@@ -128,14 +127,12 @@ void vga_set_echo(uint8_t enabled) {
 void vga_scroll(void) {
     uint8_t color = vga_entry_color(vga.fg_color, vga.bg_color);
     
-    /* Move all lines up */
     for (uint32_t y = 0; y < vga.height - 1; y++) {
         for (uint32_t x = 0; x < vga.width; x++) {
             vga.buffer[y * vga.width + x] = vga.buffer[(y + 1) * vga.width + x];
         }
     }
     
-    /* Clear bottom line */
     for (uint32_t x = 0; x < vga.width; x++) {
         vga.buffer[(vga.height - 1) * vga.width + x] = vga_entry(' ', color);
     }
@@ -145,27 +142,27 @@ void vga_scroll(void) {
 
 /* ─── Put Character ─── */
 void vga_putc(char c) {
-    if (!vga.echo_enabled && c != '\\n' && c != '\\r' && c != '\\t' && c != '\\b') {
+    if (!vga.echo_enabled && c != '\n' && c != '\r' && c != '\t' && c != '\b') {
         return;
     }
     
     uint8_t color = vga_entry_color(vga.fg_color, vga.bg_color);
     
     switch (c) {
-        case '\\n':
+        case '\n':
             vga.col = 0;
             vga.row++;
             break;
             
-        case '\\r':
+        case '\r':
             vga.col = 0;
             break;
             
-        case '\\t':
+        case '\t':
             vga.col = (vga.col + 8) & ~7;
             break;
             
-        case '\\b':
+        case '\b':
             if (vga.col > 0) {
                 vga.col--;
                 vga.buffer[vga.row * vga.width + vga.col] = vga_entry(' ', color);
@@ -180,13 +177,11 @@ void vga_putc(char c) {
             break;
     }
     
-    /* Wrap to next line */
     if (vga.col >= vga.width) {
         vga.col = 0;
         vga.row++;
     }
     
-    /* Scroll if needed */
     if (vga.row >= vga.height) {
         vga_scroll();
     }
@@ -207,19 +202,16 @@ void vga_draw_box(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t color)
     
     uint8_t box_color = vga_entry_color(color, vga.bg_color);
     
-    /* Corners */
     vga.buffer[y * vga.width + x] = vga_entry('+', box_color);
     vga.buffer[y * vga.width + x + w - 1] = vga_entry('+', box_color);
     vga.buffer[(y + h - 1) * vga.width + x] = vga_entry('+', box_color);
     vga.buffer[(y + h - 1) * vga.width + x + w - 1] = vga_entry('+', box_color);
     
-    /* Horizontal lines */
     for (uint32_t i = 1; i < w - 1; i++) {
         vga.buffer[y * vga.width + x + i] = vga_entry('-', box_color);
         vga.buffer[(y + h - 1) * vga.width + x + i] = vga_entry('-', box_color);
     }
     
-    /* Vertical lines */
     for (uint32_t i = 1; i < h - 1; i++) {
         vga.buffer[(y + i) * vga.width + x] = vga_entry('|', box_color);
         vga.buffer[(y + i) * vga.width + x + w - 1] = vga_entry('|', box_color);
@@ -256,7 +248,7 @@ void vga_fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t color
 void vga_print_dec(uint64_t n) {
     char buf[32];
     int i = 30;
-    buf[31] = '\\0';
+    buf[31] = '\0';
     
     if (n == 0) {
         vga_putc('0');
@@ -275,7 +267,7 @@ void vga_print_hex(uint64_t n) {
     char buf[32];
     const char *hex = "0123456789ABCDEF";
     int i = 30;
-    buf[31] = '\\0';
+    buf[31] = '\0';
     
     if (n == 0) {
         vga_puts("0x0");
@@ -312,31 +304,26 @@ void vga_print_size(uint64_t bytes) {
 void vga_splash_screen(void) {
     vga_clear();
     
-    /* Draw themed border */
     uint8_t accent = vga_entry_color(VGA_COLOR_LBLUE, VGA_COLOR_BLACK);
     
-    /* Top border */
     for (int x = 5; x < 75; x++) {
         vga.buffer[3 * vga.width + x] = vga_entry('=', accent);
         vga.buffer[21 * vga.width + x] = vga_entry('=', accent);
     }
     
-    /* Side borders */
     for (int y = 4; y < 21; y++) {
         vga.buffer[y * vga.width + 5] = vga_entry('|', accent);
         vga.buffer[y * vga.width + 74] = vga_entry('|', accent);
     }
     
-    /* Corners */
     vga.buffer[3 * vga.width + 5] = vga_entry('+', accent);
     vga.buffer[3 * vga.width + 74] = vga_entry('+', accent);
     vga.buffer[21 * vga.width + 5] = vga_entry('+', accent);
     vga.buffer[21 * vga.width + 74] = vga_entry('+', accent);
     
-    /* Logo text - centered */
     const char *logo[] = {
         " __  ___                      ____   _____ ",
-        " /  |/  /____ _   _____  _____/ __ \\\/ ___/ ",
+        " /  |/  /____ _   _____  _____/ __ \\/ ___/ ",
         "/ /|_/ // __ \\ | / / _ \\/ ___/ / / /\\__ \\  ",
         "/ /  / // /_/ / |/ /  __/ /  / /_/ /___/ /  ",
         "/_/  /_/ \\____/|___/\\___/_/   \\____//____/   "
@@ -351,7 +338,6 @@ void vga_splash_screen(void) {
         }
     }
     
-    /* Tagline */
     const char *tagline = "Intent-Driven Operating System";
     int tag_x = (vga.width - strlen(tagline)) / 2;
     for (int i = 0; tagline[i]; i++) {
@@ -359,7 +345,6 @@ void vga_splash_screen(void) {
         vga.buffer[13 * vga.width + tag_x + i] = vga_entry(tagline[i], c);
     }
     
-    /* Version */
     const char *ver = "v" MEXAOS_VERSION " (Build " XSTR(MEXAOS_BUILD) ")";
     int ver_x = (vga.width - strlen(ver)) / 2;
     for (int i = 0; ver[i]; i++) {
@@ -367,7 +352,6 @@ void vga_splash_screen(void) {
         vga.buffer[15 * vga.width + ver_x + i] = vga_entry(ver[i], c);
     }
     
-    /* Booting message */
     const char *boot_msg = "Booting MexaOS...";
     int boot_x = (vga.width - strlen(boot_msg)) / 2;
     for (int i = 0; boot_msg[i]; i++) {
@@ -375,7 +359,6 @@ void vga_splash_screen(void) {
         vga.buffer[18 * vga.width + boot_x + i] = vga_entry(boot_msg[i], c);
     }
     
-    /* Progress bar */
     int pb_x = (vga.width - 40) / 2;
     for (int i = 0; i < 40; i++) {
         uint8_t c = vga_entry_color(VGA_COLOR_LBLUE, VGA_COLOR_BLACK);
@@ -390,12 +373,3 @@ void vga_splash_screen(void) {
 void vga_draw_logo(void) {
     vga_puts("MexaOS");
 }
-'''
-
-# Dosyaya yaz
-output_path = "/mnt/agents/output/kernel/vga.c"
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
-with open(output_path, 'w') as f:
-    f.write(vga_c)
-
-print(f"Written: kernel/vga.c ({len(vga_c)} chars)")
