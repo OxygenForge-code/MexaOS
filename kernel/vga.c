@@ -373,3 +373,8 @@ void vga_splash_screen(void) {
 void vga_draw_logo(void) {
     vga_puts("MexaOS");
 }
+
+void vga_putchar(char c) {
+    vga_putc(c);
+}
+
