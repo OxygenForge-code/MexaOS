@@ -25,7 +25,7 @@ QEMU        := qemu-system-x86_64
 GRUB_MKRESCUE := grub-mkrescue
 
 # ─── Flags ───
-# Boot sector = binary format, Kernel asm = elf64
+# Boot files = binary format, Kernel asm = elf64
 BOOT_ASFLAGS := -f bin
 KERN_ASFLAGS := -f elf64 -D__MEXAOS_BUILD__=$(BUILD)
 
@@ -40,9 +40,8 @@ CFLAGS      := -m64 -ffreestanding -O2 -Wall -Wextra \
 LDFLAGS     := -m elf_x86_64 -T $(KERN_DIR)/linker.ld -nostdlib
 
 # ─── Source Files ───
-# boot.asm binary olarak derlenecek, stage2.asm ve isr.asm elf64 olarak
-KERN_ASM_SRCS := $(BOOT_DIR)/stage2.asm \
-                 $(KERN_DIR)/isr.asm
+# boot.asm ve stage2.asm BINARY olarak derlenecek
+# isr.asm ELF64 olarak kernel ile link edilecek
 
 C_SRCS      := $(KERN_DIR)/kmain.c \
                $(KERN_DIR)/vga.c \
@@ -59,7 +58,7 @@ C_SRCS      := $(KERN_DIR)/kmain.c \
                $(KERN_DIR)/window.c
 
 # ─── Object Files ───
-KERN_ASM_OBJS := $(patsubst %.asm,$(OUT_DIR)/%.o,$(notdir $(KERN_ASM_SRCS)))
+KERN_ASM_OBJS := $(OUT_DIR)/isr.o
 C_OBJS      := $(patsubst %.c,$(OUT_DIR)/%.o,$(notdir $(C_SRCS)))
 OBJS        := $(KERN_ASM_OBJS) $(C_OBJS)
 
@@ -76,16 +75,17 @@ $(OUT_DIR):
 $(ISO_DIR):
 	@mkdir -p $(ISO_DIR)/boot/grub
 
-# ─── Boot sector (BINARY, not ELF) ───
+# ─── Boot sector (BINARY) ───
 $(OUT_DIR)/boot.bin: $(BOOT_DIR)/boot.asm | $(OUT_DIR)
 	@echo "  AS    $< (binary boot sector)"
 	@$(AS) $(BOOT_ASFLAGS) $< -o $@
 
-# ─── Stage 2 & ISR (ELF64 objects for linking) ───
-$(OUT_DIR)/stage2.o: $(BOOT_DIR)/stage2.asm | $(OUT_DIR)
-	@echo "  AS    $<"
-	@$(AS) $(KERN_ASFLAGS) $< -o $@
+# ─── Stage 2 (BINARY) ───
+$(OUT_DIR)/stage2.bin: $(BOOT_DIR)/stage2.asm | $(OUT_DIR)
+	@echo "  AS    $< (binary stage2)"
+	@$(AS) $(BOOT_ASFLAGS) $< -o $@
 
+# ─── ISR (ELF64 for kernel linking) ───
 $(OUT_DIR)/isr.o: $(KERN_DIR)/isr.asm | $(OUT_DIR)
 	@echo "  AS    $<"
 	@$(AS) $(KERN_ASFLAGS) $< -o $@
@@ -100,31 +100,31 @@ $(OUT_DIR)/$(TARGET).bin: $(OBJS) $(KERN_DIR)/linker.ld | $(OUT_DIR)
 	@echo "  LD    $@"
 	@$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-# ─── Create ISO with GRUB ───
+# ─── Create floppy/disk image with boot sector + stage2 + kernel ───
+$(OUT_DIR)/disk.img: $(OUT_DIR)/boot.bin $(OUT_DIR)/stage2.bin $(OUT_DIR)/$(TARGET).bin | $(OUT_DIR)
+	@echo "  IMG   $@"
+	@dd if=/dev/zero of=$@ bs=512 count=2880 2>/dev/null
+	@dd if=$(OUT_DIR)/boot.bin of=$@ bs=512 conv=notrunc 2>/dev/null
+	@dd if=$(OUT_DIR)/stage2.bin of=$@ bs=512 seek=1 conv=notrunc 2>/dev/null
+	@dd if=$(OUT_DIR)/$(TARGET).bin of=$@ bs=512 seek=9 conv=notrunc 2>/dev/null
+
+# ─── Create ISO with GRUB (fallback) ───
 $(OUT_DIR)/$(TARGET).iso: $(OUT_DIR)/$(TARGET).bin $(KERN_DIR)/grub.cfg | $(ISO_DIR)
 	@echo "  ISO   $@"
 	@cp $(OUT_DIR)/$(TARGET).bin $(ISO_DIR)/boot/$(TARGET).bin
 	@cp $(KERN_DIR)/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
 	@$(GRUB_MKRESCUE) -o $@ $(ISO_DIR) 2>/dev/null || \
-	 (echo "  Note: grub-mkrescue failed, trying xorriso..." && \
+	 (echo "  Note: grub-mkrescue failed, trying grub2-mkrescue..." && \
 	  grub2-mkrescue -o $@ $(ISO_DIR) 2>/dev/null) || \
 	 (echo "  Note: Creating flat binary fallback..." && \
 	  cp $(OUT_DIR)/$(TARGET).bin $@)
 
-# ─── Run in QEMU ───
-run: $(OUT_DIR)/$(TARGET).iso
+# ─── Run in QEMU (with custom boot) ───
+run: $(OUT_DIR)/disk.img
 	@echo "  QEMU  MexaOS v$(VERSION) (Build $(BUILD))"
 	@$(QEMU) -m 512M \
-		-cdrom $(OUT_DIR)/$(TARGET).iso \
-		-boot d \
-		-serial stdio \
-		-vga std \
-		-cpu qemu64 \
-		-no-reboot \
-		-no-shutdown \
-		-display sdl 2>/dev/null || \
-	$(QEMU) -m 512M \
-		-cdrom $(OUT_DIR)/$(TARGET).iso \
+		-fda $(OUT_DIR)/disk.img \
+		-boot a \
 		-serial stdio \
 		-vga std \
 		-cpu qemu64 \
@@ -132,10 +132,11 @@ run: $(OUT_DIR)/$(TARGET).iso
 		-no-shutdown
 
 # ─── Debug mode ───
-debug: $(OUT_DIR)/$(TARGET).iso
+debug: $(OUT_DIR)/disk.img
 	@echo "  DEBUG MexaOS v$(VERSION)"
 	@$(QEMU) -m 512M \
-		-cdrom $(OUT_DIR)/$(TARGET).iso \
+		-fda $(OUT_DIR)/disk.img \
+		-boot a \
 		-serial stdio \
 		-vga std \
 		-cpu qemu64 \
@@ -160,7 +161,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all       - Build complete ISO image (default)"
-	@echo "  run       - Build and run in QEMU"
+	@echo "  run       - Build and run in QEMU (floppy with custom boot)"
 	@echo "  debug     - Run with GDB debugging support"
 	@echo "  clean     - Remove all build artifacts"
 	@echo "  format    - Format source code"
